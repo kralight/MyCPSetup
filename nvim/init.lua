@@ -1,4 +1,4 @@
- settings --
+-- System settings --
 vim.opt.clipboard = 'unnamedplus'
 
 
@@ -128,13 +128,9 @@ vim.cmd([[
 
 
 
--- Theme (custom) --
-vim.g.everforest_background = 'hard'
-vim.opt.background = 'light'
-vim.cmd('colorscheme everforest')
+-- Theme --
 local M = {}
 function M.setup()
-	vim.cmd('highlight clear')
 	vim.opt.termguicolors = true
 
 	local colors = {
@@ -161,6 +157,7 @@ function M.setup()
 		LineNr = { fg=colors.maroon},
 		Cursor = { fg=colors.cyan, bg=colors.black },
 		ModeMsg = { fg=colors.black, bold=true },
+		Identifier = { fg=colors.black },
 
 		Comment = { fg=colors.blue, italic=true },
 		Constant = { fg=colors.pink },
@@ -189,6 +186,10 @@ function M.setup()
 		TabLine = { fg=colors.white, bg=colors.gray },
 		TabLineSel = { fg=colors.black, bg=colors.white },
 		TabLineFill = { bg=colors.gray },
+
+
+		-- Tree-sitter
+		["@variable"] = { fg=colors.black },
 	}
 
 	for group, opts in pairs(highlight) do
