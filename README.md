@@ -13,6 +13,7 @@ Neovim: https://github.com/kralight/MyCPSetup/blob/main/nvim/init.lua<br>
 
 ## Install what I install
 ### Windows (install in Windows Powershell):
+(If you use Linux instead of Windows, skip this part)
 WSL with default distro is Ubuntu.
 ```powershell
 wsl --install
