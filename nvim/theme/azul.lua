@@ -30,7 +30,7 @@ function M.setup()
 		Cursor = { fg=colors.black, bg=colors.lemon },
 		CursorInsert = { fg=colors.black, bg=colors.lemon },
 		CursorReplace = { fg=colors.black, bg=colors.lemon },
-		ModeMsg = { fg=colors.lemon, bold=true },
+		ModeMsg = { fg=colors.cyan, bold=true },
 		Identifier = { fg=colors.cyan },
 		Delimiter = { fg=colors.lemon },
 
@@ -40,7 +40,7 @@ function M.setup()
 
 		Keyword = { fg=colors.red, bold=true },
 		Statement = { fg=colors.red, bold=true },
-		Type = { fg=colors.white },
+		Type = { fg=colors.white, italic=true },
 		PreProc = { fg=colors.green },
 		Operator = { fg=colors.lemon },
 		Function = { fg=colors.cyan },
