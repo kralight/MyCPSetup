@@ -51,7 +51,6 @@ if has("gui_running")
 endif
 "status bar custom
 set laststatus=1
-set statusline=%#StatusLine#\ ㉿kralight\ %#Visual#>\ %#Visual#\ %f\ %m\ %=%#Visual#<%#StatusLine#\ %l/%L\ [%p%%]\
 
 
 "back-up files & undo files problem
