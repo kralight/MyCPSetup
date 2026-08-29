@@ -3,7 +3,7 @@ My personal competitve programming setup (man, I actually don't know anything ab
 
 ## My setup
 OS: Windows 10.<br>
-WSL: Ubuntu 26.04 LTS
+WSL: Ubuntu 26.04 LTS.<br>
 Code editor: Neovim (Qt version), or gVim sometimes.<br>
 Programming language: C++17 and Python 3.14.7.<br>
 
