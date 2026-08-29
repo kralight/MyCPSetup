@@ -14,23 +14,23 @@ Neovim: https://github.com/kralight/MyCPSetup/blob/main/nvim/init.lua<br>
 ## Install what I install
 ### Windows (install in Windows Powershell):
 WSL with default distro is Ubuntu.
-'''powershell
+```powershell
 wsl --install
-'''
+```
 Neovim-qt.
-'''powershell
+```powershell
 winget install Neovim.Neovim-qt
-'''
+```
 ### Ubuntu (install in Ubuntu Terminal):
 Update package manager.
-'''bash
+```bash
 sudo apt update && sudo apt upgrade -y
-'''
+```
 C++ tools.
-'''bash
+```bash
 sudo apt install build-essential gdb -y
-'''
+```
 Python 3.14.4
-'''bash
+```bash
 sudo apt install python3
-'''
+```
