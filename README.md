@@ -7,11 +7,6 @@ WSL: Ubuntu 26.04 LTS.<br>
 Code editor: Neovim (Qt version), or gVim sometimes.<br>
 Programming language: C++17 and Python 3.14.4.<br>
 
-## Config file
-WSL: https://github.com/kralight/MyCPSetup/blob/main/wsl/.bashrc<br>
-Neovim: https://github.com/kralight/MyCPSetup/blob/main/nvim/init.lua<br>
-(g)Vim: https://github.com/kralight/MyCPSetup/blob/main/(g)vim/.vimrc<br>
-
 ## Install what I install
 ### Windows (install in Windows Powershell):
 (If you use Linux instead of Windows, skip this part)
