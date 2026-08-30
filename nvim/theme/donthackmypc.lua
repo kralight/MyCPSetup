@@ -28,8 +28,8 @@ function M.setup()
 
 		Normal = { fg=colors.light_white, bg=colors.dark_black },
 		LineNr = { fg=colors.light_black},
-		Cursor = { fg=colors.black, bg=colors.light_white },
-		CursorInsert = { fg=colors.black, bg=colors.dark_green },
+		Cursor = { fg=colors.black, bg=colors.light_red },
+		CursorInsert = { fg=colors.black, bg=colors.light_red },
 		CursorReplace = { fg=colors.black, bg=colors.dark_green },
 		ModeMsg = { fg=colors.dark_green, bold=true },
 		Identifier = { fg=colors.light_white },
