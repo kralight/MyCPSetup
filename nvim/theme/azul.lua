@@ -51,7 +51,7 @@ function M.setup()
 		Title = { fg=colors.lochinvar },
 
 		Visual = { fg=colors.black, bg=colors.lochinvar },
-		MatchParen = { bg=colors.black },
+		MatchParen = { bg=colors.red },
 		NonText = { fg=colors.gray, bold=true },
 		CurSearch = { fg=colors.black, bg=colors.yellow },
 
@@ -60,12 +60,14 @@ function M.setup()
 		MoreMsg = { fg=colors.lochinvar },
 		Question = { fg=colors.lochinvar },
 
-		TabLine = { fg=colors.gray, bg=colors.navy },
-		TabLineSel = { fg=colors.black, bg=colors.lochinvar },
-		TabLineFill = { bg=colors.black },
+		TabLine = { fg=colors.white, bg=colors.lochinvar },
+		TabLineSel = { fg=colors.white, bg=colors.black },
+		TabLineFill = { bg=colors.navy },
 		Pmenu = { fg=colors.black, bg=colors.gray },
 		PmenuSel = { fg=colors.black, bg=colors.lochinvar },
 
+		Statusline = { fg=colors.black, bg=colors.lochinvar },
+		StatuslineNC = { fg=colors.black, bg=colors.gray },
 
 		-- Tree-sitter
 		["@variable"] = { fg=colors.white },
