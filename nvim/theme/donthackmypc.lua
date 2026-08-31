@@ -5,7 +5,7 @@ function M.setup()
 
 	local colors = {
 		magenta="#300924",
-		dark_black="#05080A",
+		dark_black="#101218",
 		light_black="#555753",
 		dark_red="#CC0000",
 		light_red="#EF2929",
@@ -42,7 +42,7 @@ function M.setup()
 
 		Keyword = { fg=colors.light_green, bold=true },
 		Statement = { fg=colors.light_green, bold=true },
-		Type = { fg=colors.dark_green, italic=true },
+		Type = { fg=colors.light_green, italic=true },
 		PreProc = { fg=colors.dark_cyan },
 		Operator = { fg=colors.light_white },
 		Function = { fg=colors.light_cyan },
@@ -72,7 +72,7 @@ function M.setup()
 		PmenuSel = { fg=colors._dark_black, bg=colors.light_green },
 
 		Statusline = { fg=colors.black, bg=colors.dark_green },
-		StatuslineNC = { fg=colors.dark_black, bg=colors.dark_light },
+		StatuslineNC = { fg=colors.dark_black, bg=colors.light_black },
 
 		-- Tree-sitter
 		["@variable"] = { fg=colors.light_white },
