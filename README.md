@@ -46,13 +46,13 @@ Midnight Commander (mc).
 sudo apt install mc
 ```
 ## Why I use them?
-**Why I keep Windows for main OS**:<br>
+### Why I keep Windows for main OS
 -> Because my mom can't use Linux.<br>
-**Why I use Ubuntu (in WSL) for main programming tasks**:<br>
+### Why I use Ubuntu (in WSL) for main programming tasks
 - Fast workflow. It's lightweight, you don't need a GUI App for most development tasks.
 - Separate from Windows. Ubuntu is dedicated to development and programming, making it easier to manage and back up.
 - Strong developer tools, with plenty documents and tutorials -> easy to use.<br>
-**Why I use Neovim (nvim) for main code editor**:<br>
+### Why I use Neovim (nvim) for main code editor
 -> Because it's a lightweight terminal-based editor, that's highly customizable. Vim motions make coding faster, and I've been using Neovim since I was young.<br>
-**Why I use Midnight Commander**:<br>
+### Why I use Midnight Commander
 -> Because I need to manage files, create and switch between files quickly, especially for competitive programming.
