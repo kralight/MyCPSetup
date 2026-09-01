@@ -33,17 +33,26 @@ C++ tools.
 ```bash
 sudo apt install build-essential gdb -y
 ```
-Python 3.14.4
+Python 3.14.4.
 ```bash
 sudo apt install python3
 ```
-Neovim
+Neovim.
 ```bash
 sudo apt install neovim
 ```
-Midnight Commander (mc)
+Midnight Commander (mc).
 ```bash
 sudo apt install mc
 ```
-```
-```
+## Why I use them?
+**Why I keep Windows for main OS**:<br>
+-> Because my mom can't use Linux.<br>
+**Why I use Ubuntu (in WSL) for main programming tasks**:<br>
+- Fast workflow. It's lightweight, you don't need a GUI App for most development tasks.
+- Separate from Windows. Ubuntu is dedicated to development and programming, making it easier to manage and back up.
+- Strong developer tools, with plenty documents and tutorials -> easy to use.<br>
+**Why I use Neovim (nvim) for main code editor**:<br>
+-> Because it's a lightweight terminal-based editor, that's highly customizable. Vim motions make coding faster, and I've been using Neovim since I was young.<br>
+**Why I use Midnight Commander**:<br>
+-> Because I need to manage files, create and switch between files quickly, especially for competitive programming.
