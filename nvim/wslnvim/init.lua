@@ -45,8 +45,8 @@ require("lazy").setup({
 
 
 -- Editor settings --
-vim.opt.number = true
-vim.opt.relativenumber = true
+vim.opt.number = false
+vim.opt.relativenumber = false
 vim.opt.title = true
 vim.opt.cursorline = false
 vim.opt.wrap = false
@@ -58,8 +58,7 @@ vim.opt.shiftwidth = 4
 vim.opt.autoindent = true
 vim.opt.smartindent = true
 
-vim.opt.showtabline = 2
-vim.opt.laststatus = 1
+
 vim.opt.guicursor = {
   "n-v-c:block-Cursor/lCursor-blinkwait1000-blinkon1000-blinkoff250",
   "i-ci:hor25-CursorInsert/lCursor-blinkwait1000-blinkon1000-blinkoff250",
@@ -99,7 +98,7 @@ vim.keymap.set('n', 'cp', function()
 	require('oil').open('/home/kralight/CP')
 end)
 
-vim.keymap.set('n', '<C-Tab>', ':tabnext<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<S-Tab>', ':tabnext<CR>', { noremap = true, silent = true })
 
 
 
@@ -109,7 +108,6 @@ local number_toggle_group = vim.api.nvim_create_augroup("NumberToggle", {
 
 local line_number_enabled = true
 
--- F4: bật/tắt hoàn toàn số dòng
 vim.keymap.set("n", "<F4>", function()
     line_number_enabled = not line_number_enabled
 
@@ -120,7 +118,6 @@ end, {
     desc = "Toggle line numbers",
 })
 
--- Vào Insert: tắt relative number
 vim.api.nvim_create_autocmd("InsertEnter", {
     group = number_toggle_group,
     callback = function()
@@ -129,7 +126,6 @@ vim.api.nvim_create_autocmd("InsertEnter", {
     end,
 })
 
--- Ra Normal: khôi phục trạng thái F4
 vim.api.nvim_create_autocmd("InsertLeave", {
     group = number_toggle_group,
     callback = function()
@@ -178,16 +174,59 @@ vim.keymap.set("n", "<F9>", function()
         vim.notify("Input file not found: " .. inp, vim.log.levels.WARN)
     end
 end, { desc = "CP: Compile & Run with input file" })
-
-
-
+--
 -- F10: save -> compile -> run with manual input
 vim.keymap.set("n", "<F10>", function()
-    local exe = cp_compile()
-    if not exe then return end
-
+	local exe = cp_compile()
+		if not exe then
+			return
+		end
     vim.cmd("split | terminal time " .. exe)
 end, { desc = "CP: Compile & Run manually" })
+
+
+
+
+
+-- Workspace layout
+local cpp_layout = vim.api.nvim_create_augroup("CppInputLayout", {
+
+  clear = true,
+})
+
+vim.api.nvim_create_autocmd("BufEnter", {
+  group = cpp_layout,
+  pattern = "*.cpp",
+  callback = function()
+    
+    if vim.t.cpp_input_open then
+      return
+    end
+
+    vim.t.cpp_input_open = true
+
+    local cpp_file = vim.api.nvim_buf_get_name(0)
+    local inp_file = vim.fn.fnamemodify(cpp_file, ":r") .. ".inp"
+
+    vim.cmd("rightbelow 70vsplit")
+    vim.cmd("wincmd l")
+    vim.cmd("edit " .. vim.fn.fnameescape(inp_file))
+
+    vim.cmd("wincmd h")
+  end,
+})
+
+
+vim.opt.showtabline = 2
+vim.opt.laststatus = 2
+
+vim.o.statusline = table.concat({
+  " %F",
+  " %m",
+  "%=",
+  "%L Ln",
+  " | Row %l, Col %c ",
+})
 
 
 
@@ -200,78 +239,103 @@ function M.setup()
 	vim.opt.termguicolors = true
 
 	local colors = {
-		white = "#FFFFFF",
 		black = "#000000",
-		gray = "#DFDFDF",
-		red = "#FF0000",
-		green = "#00FF00",
-		blue = "#0000FF",
+		bright_black = "#676767",
+		white = "#F0F0F0",
+		bright_white = "#FFFFFF",
+		red = "#BB0000",
+		bright_red = "#FF0000",
+		green = "#00BB00",
+		bright_green = "#00FF00",
 		yellow = "#FFFF00",
-		pink = "#FF00FF",
-		purple = "#6A0DAD",
-		lavender = "#6A5ACD",
-		maroon = "#A52A2A",
-		teal = "#2E8B57",
-		cyan = "#00FFFF",
-		navy = "#000080",
-		lemon = "#FFFF99",
-		lochinvar = "#2e8b7c",
+		bright_yellow = "#FFFF7F",
+		blue = "#000080",
+		bright_blue = "#00CCFF",
+		purple = "#881188",
+		bright_purple = "#DD00DD",
+		cyan = "#2E8B7C",
+		bright_cyan = "#00FFFF",
 	}
 	local highlight = {
 		OilDir = { fg=colors.white },
 		OilDirIcon = { fg=colors.white },
 
-		Normal = { fg=colors.white, bg=colors.navy },
-		LineNr = { fg=colors.lemon},
-		Cursor = { fg=colors.black, bg=colors.lemon },
-		CursorInsert = { fg=colors.black, bg=colors.lemon },
-		CursorReplace = { fg=colors.black, bg=colors.lemon },
+		Normal = { fg=colors.white, bg=colors.blue },
+		LineNr = { fg=colors.bright_yellow},
+		CursorLine = { bg=colors.cyan },
+		Cursor = { fg=colors.black, bg=colors.bright_yellow },
+		CursorInsert = { fg=colors.black, bg=colors.bright_yellow },
+		CursorReplace = { fg=colors.black, bg=colors.bright_yellow },
 		ModeMsg = { fg=colors.cyan, bold=true },
-		Identifier = { fg=colors.cyan },
-		Delimiter = { fg=colors.lemon },
 
-		Comment = { fg=colors.lochinvar, italic=true },
-		Constant = { fg=colors.green },
-		String = { fg=colors.lemon },
+		Comment = { fg=colors.cyan, italic=true },
+		Constant = { fg=colors.bright_green },
+		cConstant = { fg=colors.bright_blue },
+		cIncluded = { fg=colors.bright_red },
+		Special = { fg=colors.bright_green },
+		String = { fg=colors.bright_yellow },
 
-		Keyword = { fg=colors.red, bold=true },
-		Statement = { fg=colors.red, bold=true },
-		Type = { fg=colors.white, italic=true },
-		PreProc = { fg=colors.green },
-		Operator = { fg=colors.lemon },
-		Function = { fg=colors.cyan },
+		Keyword = { fg=colors.white },
+		Statement = { fg=colors.white },
+		Type = { fg=colors.white },
+		PreProc = { fg=colors.bright_green },
 
-		Error = { fg=colors.white, bg=colors.red, bold=true },
-		Special = { fg=colors.lemon },
-		Todo = { fg=colors.blue, bg=colors.yellow },
-		Title = { fg=colors.lochinvar },
+		Error = { fg=colors.white, bg=colors.bright_red },
+		Todo = { fg=colors.black, bg=colors.yellow },
+		Title = { fg=colors.bright_yellow },
 
-		Visual = { fg=colors.black, bg=colors.lochinvar },
-		MatchParen = { bg=colors.red },
-		NonText = { fg=colors.gray, bold=true },
+		Visual = { fg=colors.black, bg=colors.cyan },
+		MatchParen = { fg=colors.bright_red },
+		NonText = { fg=colors.bright_blue },
 		CurSearch = { fg=colors.black, bg=colors.yellow },
 
-		WarningMsg = { fg=colors.red, bold=true },
-		ErrorMsg = { fg=colors.white, bg=colors.red, bold=true },
-		MoreMsg = { fg=colors.lochinvar },
-		Question = { fg=colors.lochinvar },
+		WarningMsg = { fg=colors.bright_red },
+		ErrorMsg = { fg=colors.white, bg=colors.bright_red, bold=true },
+		MoreMsg = { fg=colors.cyan },
+		Question = { fg=colors.cyan },
 
-		TabLine = { fg=colors.white, bg=colors.lochinvar },
+		TabLine = { fg=colors.black, bg=colors.cyan },
 		TabLineSel = { fg=colors.white, bg=colors.black },
-		TabLineFill = { bg=colors.navy },
-		Pmenu = { fg=colors.black, bg=colors.gray },
-		PmenuSel = { fg=colors.black, bg=colors.lochinvar },
+		TabLineFill = { bg=colors.cyan },
+		Pmenu = { fg=colors.black, bg=colors.bright_black },
+		PmenuSel = { fg=colors.black, bg=colors.cyan },
 
-		Statusline = { fg=colors.black, bg=colors.lochinvar },
-		StatuslineNC = { fg=colors.black, bg=colors.gray },
+		Statusline = { fg=colors.white, bg=colors.black },
+		StatuslineNC = { fg=colors.black, bg=colors.cyan },
 
-		-- Tree-sitter
-		["@variable"] = { fg=colors.white },
+		-- Custom CP syntax highlight
+		CPOperator = { fg=colors.bright_yellow },
+		CPContainer = { fg=colors.bright_blue },
+		CPFunction = { fg=colors.bright_blue },
 	}
 
 	for group, opts in pairs(highlight) do
 		vim.api.nvim_set_hl(0, group, opts)
 	end
+
+	
+	-- Test operator highlighting
+	vim.api.nvim_create_autocmd("FileType", {
+		pattern = { "c", "cpp" },
+
+		callback = function()
+			vim.fn.matchadd(
+				"CPOperator",
+				[[->\|::\|,\|;\|<\|>\|{\|}]]
+			)
+			vim.fn.matchadd(
+				"CPContainer",
+				[[\<\(array\|bitset\|vector\|stack\|queue\|deque\|priority_queue\|forward_list\|list\|set\|multiset\|unordered_set\|unordered_multiset\|map\|multimap\|unordered_map\|unordered_multimap\)\>]]
+			)
+
+			vim.fn.matchadd(
+				"CPFunction",
+				[[\<\(begin\|end\|rbegin\|rend\|size\|length\|sizeof\|empty\|resize\|capacity\|reverse\|assign\|memset\|front\|back\|at\|insert\|erase\|push_back\|pop_back\|push_front\|pop_front\|push\|pop\|clear\|swap\|count\|find\|lower_bound\|upper_bound\)\>]]
+			)
+
+		end,
+	})
+
 end
 
 M.setup()
