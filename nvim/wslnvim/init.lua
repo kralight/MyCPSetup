@@ -24,25 +24,11 @@ require("lazy").setup({
 	-- Tree-sitter
 	{
   	"nvim-treesitter/nvim-treesitter",
+	branch = "master",
   	build = ":TSUpdate",
   	lazy = false,
 	},
 
-  -- Oil.nvim
-  {
-    'stevearc/oil.nvim',
-    dependencies = { 'nvim-tree/nvim-web-devicons' },
-    config = function()
-      require("oil").setup({
-        default_file_explorer = true,
-        columns = { "icon" },
-        view_options = { show_hidden = true },
-      })
-    end,
-    keys = {
-        { "mo", "<CMD>Oil<CR>", desc = "Open File Manager" },
-    },
-  },
 }, { checker = { enabled = false } })
 
 
@@ -58,7 +44,6 @@ vim.opt.cursorline = false
 vim.opt.wrap = false
 vim.opt.encoding = 'utf-8'
 vim.opt.termguicolors = true
-vim.opt.mouse = 'a'
 
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
@@ -101,14 +86,10 @@ vim.keymap.set('i', '<C-z>', '<Esc>ui', { noremap = true, silent = true })
 vim.keymap.set('n', '<C-a>', 'gg0vG$', { noremap = true, silent = true })
 vim.keymap.set('i', '<C-a>', '<Esc>gg0vG$', { noremap = true, silent = true })
 
-vim.keymap.set('n', 'cp', function()
-	require('oil').open('/home/kralight/CP')
-end)
-
 vim.keymap.set('n', '<S-Tab>', ':tabnext<CR>', { noremap = true, silent = true })
 
 
-
+-- Numberline engine
 local number_toggle_group = vim.api.nvim_create_augroup("NumberToggle", {
     clear = true,
 })
@@ -140,6 +121,22 @@ vim.api.nvim_create_autocmd("InsertLeave", {
         vim.opt.relativenumber = line_number_enabled
     end,
 })
+
+-- Terminal toggle
+vim.keymap.set("n", "<F2>", function()
+	for _, win in ipairs(vim.api.nvim_list_wins()) do
+		local buf = vim.api.nvim_win_get_buf(win)
+
+		if vim.bo[buf].buftype == "terminal" then
+			vim.api.nvim_win_close(win, true)
+			return
+		end
+	end
+
+	vim.cmd("botright 20split")
+	vim.cmd("terminal")
+	vim.cmd("startinsert")
+end, { desc = "Toggle terminal" })
 
 
 
@@ -176,8 +173,10 @@ vim.keymap.set("n", "<F9>", function()
     local inp = vim.fn.expand("%:p:r") .. ".inp"
 
     if vim.fn.filereadable(inp) == 1 then
-        vim.cmd("split | terminal time " .. exe .. " < " .. vim.fn.shellescape(inp))
+		vim.cmd("startinsert")
+        vim.cmd("botright 20split | terminal time " .. exe .. " < " .. vim.fn.shellescape(inp))
     else
+		vim.cmd("startinsert")
         vim.notify("Input file not found: " .. inp, vim.log.levels.WARN)
     end
 end, { desc = "CP: Compile & Run with input file" })
@@ -188,7 +187,7 @@ vim.keymap.set("n", "<F10>", function()
 		if not exe then
 			return
 		end
-    vim.cmd("split | terminal time " .. exe)
+    vim.cmd("botright 20split | terminal time " .. exe)
 end, { desc = "CP: Compile & Run manually" })
 
 
@@ -224,7 +223,7 @@ vim.api.nvim_create_autocmd("BufEnter", {
 })
 
 
-vim.opt.showtabline = 2
+vim.opt.showtabline = 1
 vim.opt.laststatus = 2
 
 vim.o.statusline = table.concat({
@@ -241,6 +240,30 @@ vim.o.statusline = table.concat({
 
 
 -- Theme --
+-- Enable Tree-sitter highlighting: for C, C++, Python and Lua
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = { "c", "cpp", "java", "python", "lua" },
+    callback = function(args)
+        vim.treesitter.start(args.buf)
+    end,
+})
+
+
+
+-- Terminal color
+-- Use colorscheme in terminal emulator
+-- Change background to black and foreground to white
+
+vim.api.nvim_create_autocmd("TermOpen", {
+    callback = function()
+        vim.wo.winhl = "Normal:TermNormal,NormalNC:TermNormal"
+    end,
+})
+
+
+
+
+-- Syntax highlight
 local M = {}
 function M.setup()
 	vim.opt.termguicolors = true
@@ -254,7 +277,7 @@ function M.setup()
 		bright_red = "#FF0000",
 		green = "#00BB00",
 		bright_green = "#00FF00",
-		yellow = "#FFFF00",
+		yellow = "#BBBB00",
 		bright_yellow = "#FFFF7F",
 		blue = "#000080",
 		bright_blue = "#00CCFF",
@@ -264,9 +287,6 @@ function M.setup()
 		bright_cyan = "#00FFFF",
 	}
 	local highlight = {
-		OilDir = { fg=colors.white },
-		OilDirIcon = { fg=colors.white },
-
 		Normal = { fg=colors.white, bg=colors.blue },
 		LineNr = { fg=colors.bright_yellow},
 		CursorLine = { bg=colors.cyan },
@@ -274,6 +294,7 @@ function M.setup()
 		CursorInsert = { fg=colors.black, bg=colors.bright_yellow },
 		CursorReplace = { fg=colors.black, bg=colors.bright_yellow },
 		ModeMsg = { fg=colors.cyan, bold=true },
+		TermNormal = { fg=colors.white, bg=colors.black },
 
 		Comment = { fg=colors.cyan, italic=true },
 		Constant = { fg=colors.bright_green },
@@ -286,6 +307,8 @@ function M.setup()
 		Statement = { fg=colors.white },
 		Type = { fg=colors.white },
 		PreProc = { fg=colors.bright_green },
+		Function = { fg=colors.bright_blue },
+		Identifier = { fg=colors.bright_blue },
 
 		Error = { fg=colors.white, bg=colors.bright_red },
 		Todo = { fg=colors.black, bg=colors.yellow },
@@ -310,9 +333,30 @@ function M.setup()
 		Statusline = { fg=colors.white, bg=colors.black },
 		StatuslineNC = { fg=colors.black, bg=colors.cyan },
 
+
+
+		-- This part is just for who installed Tree-sitter
+		-- Tree-sitter: lua
+		["@punctuation.bracket.lua"] = { fg=colors.bright_yellow },
+		["@punctuation.delimiter.lua"] = { fg=colors.bright_yellow },
+		["@constructor.lua"] = { fg=colors.bright_yellow },
+		["@property.lua"] = { fg=colors.white },
+
+		-- Tree-sitter: cpp
+		["@function.cpp"] = { fg=colors.white },
+		["@type.builtin.cpp"] = { fg=colors.white},
+		["@variable.cpp"] = { fg=colors.bright_blue },
+		["@character.cpp"] = { fg=colors.yellow },
+		["@string.escape.cpp"] = { fg=colors.yellow },
+		["@keyword.import.cpp"] = { fg=colors.green },
+		--
+		--
+		
+
 		-- Custom CP syntax highlight
+		CPIO = { fg=colors.white },
 		CPOperator = { fg=colors.bright_yellow },
-		CPContainer = { fg=colors.bright_blue },
+		CPContainer = { fg=colors.white },
 		CPFunction = { fg=colors.bright_blue },
 	}
 
@@ -326,6 +370,11 @@ function M.setup()
 		pattern = { "c", "cpp" },
 
 		callback = function()
+			vim.fn.matchadd(
+				"CPIO",
+				[[\<\(cin\|cout\|printf\|scanf\)\>]],
+				100
+			)
 			vim.fn.matchadd(
 				"CPOperator",
 				[[->\|::\|,\|;\|<\|>\|{\|}]]
