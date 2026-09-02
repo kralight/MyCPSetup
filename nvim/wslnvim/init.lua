@@ -20,8 +20,14 @@ vim.opt.rtp:prepend(lazypath)
 
 
 require("lazy").setup({
-  -- Theme Everforest
-  { "sainnhe/everforest", name = "everforest", priority = 1000 },
+	
+	-- Tree-sitter
+	{
+  	"nvim-treesitter/nvim-treesitter",
+  	build = ":TSUpdate",
+  	lazy = false,
+	},
+
   -- Oil.nvim
   {
     'stevearc/oil.nvim',
@@ -52,6 +58,7 @@ vim.opt.cursorline = false
 vim.opt.wrap = false
 vim.opt.encoding = 'utf-8'
 vim.opt.termguicolors = true
+vim.opt.mouse = 'a'
 
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
@@ -314,7 +321,7 @@ function M.setup()
 	end
 
 	
-	-- Test operator highlighting
+	-- Custom CP highlighting
 	vim.api.nvim_create_autocmd("FileType", {
 		pattern = { "c", "cpp" },
 
@@ -339,5 +346,3 @@ function M.setup()
 end
 
 M.setup()
-
-return M
