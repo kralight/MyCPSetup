@@ -49,6 +49,8 @@ vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.autoindent = true
 vim.opt.smartindent = true
+vim.opt.expandtab = true
+vim.opt.scrolloff = 8
 
 
 vim.opt.guicursor = {
@@ -194,6 +196,7 @@ end, { desc = "CP: Compile & Run manually" })
 
 
 
+
 -- Workspace layout
 local cpp_layout = vim.api.nvim_create_augroup("CppInputLayout", {
 
@@ -224,7 +227,7 @@ vim.api.nvim_create_autocmd("BufEnter", {
 
 
 vim.opt.showtabline = 1
-vim.opt.laststatus = 2
+vim.opt.laststatus = 0
 
 vim.o.statusline = table.concat({
   " %F",
@@ -270,19 +273,19 @@ function M.setup()
 
 	local colors = {
 		black = "#000000",
-		bright_black = "#676767",
-		white = "#F0F0F0",
+		bright_black = "#808080",
+		white = "#EEEEEE",
 		bright_white = "#FFFFFF",
-		red = "#BB0000",
+		red = "#800000",
 		bright_red = "#FF0000",
-		green = "#00BB00",
+		green = "#008000",
 		bright_green = "#00FF00",
-		yellow = "#BBBB00",
-		bright_yellow = "#FFFF7F",
+		yellow = "#808000",
+		bright_yellow = "#FFFF00",
 		blue = "#000080",
-		bright_blue = "#00CCFF",
-		purple = "#881188",
-		bright_purple = "#DD00DD",
+		bright_blue = "#00DDFF",
+		purple = "#800080",
+		bright_purple = "#FF00FF",
 		cyan = "#2E8B7C",
 		bright_cyan = "#00FFFF",
 	}
@@ -290,9 +293,9 @@ function M.setup()
 		Normal = { fg=colors.white, bg=colors.blue },
 		LineNr = { fg=colors.bright_yellow},
 		CursorLine = { bg=colors.cyan },
-		Cursor = { fg=colors.black, bg=colors.bright_yellow },
-		CursorInsert = { fg=colors.black, bg=colors.bright_yellow },
-		CursorReplace = { fg=colors.black, bg=colors.bright_yellow },
+		Cursor = { bg="#FFFF7F" },
+		CursorInsert = { bg="#FFFF7F" },
+		CursorReplace = { bg="#FFFF7F" },
 		ModeMsg = { fg=colors.cyan, bold=true },
 		TermNormal = { fg=colors.white, bg=colors.black },
 
@@ -341,17 +344,20 @@ function M.setup()
 		["@punctuation.delimiter.lua"] = { fg=colors.bright_yellow },
 		["@constructor.lua"] = { fg=colors.bright_yellow },
 		["@property.lua"] = { fg=colors.white },
+		["@variable.member.lua"] = { fg=colors.bright_blue },
 
 		-- Tree-sitter: cpp
 		["@function.cpp"] = { fg=colors.white },
 		["@type.builtin.cpp"] = { fg=colors.white},
 		["@variable.cpp"] = { fg=colors.bright_blue },
-		["@character.cpp"] = { fg=colors.yellow },
-		["@string.escape.cpp"] = { fg=colors.yellow },
-		["@keyword.import.cpp"] = { fg=colors.green },
-		--
+		["@character.cpp"] = { fg=colors.bright_yellow },
+		["@string.escape.cpp"] = { fg=colors.bright_yellow },
+		["@keyword.import.cpp"] = { fg=colors.bright_green },
+		["@keyword.directive.cpp"] = { fg=colors.bright_green },
+		["@keyword.directive.define.cpp"] = { fg=colors.bright_green },
 		--
 		
+
 
 		-- Custom CP syntax highlight
 		CPIO = { fg=colors.white },
