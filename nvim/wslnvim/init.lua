@@ -1,11 +1,3 @@
--- System settings --
-vim.opt.clipboard = 'unnamedplus'
-
-
-
-
-
-
 -- PLUGIN MANAGER --
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
@@ -23,14 +15,13 @@ require("lazy").setup({
 	
 	-- Tree-sitter
 	{
-  	"nvim-treesitter/nvim-treesitter",
-	branch = "master",
-  	build = ":TSUpdate",
-  	lazy = false,
+  	    "nvim-treesitter/nvim-treesitter",
+	    branch = "master",
+  	    build = ":TSUpdate",
+  	    lazy = false,
 	},
 
 }, { checker = { enabled = false } })
-
 
 
 
@@ -40,31 +31,71 @@ require("lazy").setup({
 vim.opt.number = false
 vim.opt.relativenumber = false
 vim.opt.title = true
-vim.opt.cursorline = false
 vim.opt.wrap = false
 vim.opt.encoding = 'utf-8'
 vim.opt.termguicolors = true
 
+vim.opt.foldcolumn = "1"
+vim.opt.fillchars:append({
+  eob = ' ',
+})
+
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
+vim.opt.expandtab = true
 vim.opt.autoindent = true
 vim.opt.smartindent = true
-vim.opt.expandtab = true
 vim.opt.scrolloff = 8
 
 
-vim.opt.guicursor = {
-  "n-v-c:block-Cursor/lCursor-blinkwait1000-blinkon1000-blinkoff250",
-  "i-ci:hor25-CursorInsert/lCursor-blinkwait1000-blinkon1000-blinkoff250",
-  "r-cr:hor10-CursorReplace",
+
+-- Tab engine
+local tab_config = {
+  text = 2,
+  python = 4,
+  cpp = 2,
+  javascript = 2,
+  typescript = 2,
+  html = 2,
+  lua = 2,
+  rust = 4,
 }
 
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = vim.tbl_keys(tab_config),
+  callback = function(args)
+    local size = tab_config[vim.bo[args.buf].filetype]
+
+    vim.opt_local.tabstop = size
+    vim.opt_local.shiftwidth = size
+    vim.opt_local.softtabstop = size
+    vim.opt_local.expandtab = true
+  end,
+})
 
 
--- Backup settings --
+
 vim.opt.backup = false
 vim.opt.writebackup = false
 vim.opt.undofile = true
+
+vim.opt.guicursor = "n-v-c:block"
+
+local group = vim.api.nvim_create_augroup("CursorShape", {})
+
+vim.api.nvim_create_autocmd("InsertEnter", {
+  group = group,
+  callback = function()
+    vim.opt.guicursor = ""
+  end,
+})
+
+vim.api.nvim_create_autocmd("InsertLeave", {
+  group = group,
+  callback = function()
+    vim.opt.guicursor = "n-v-c:block"
+  end,
+})
 
 
 
@@ -81,48 +112,11 @@ vim.keymap.set('i', '{<CR>', function()
   return '{<CR>}<Esc>O'
 end, { expr = true, noremap = true })
 
--- Windows shortcut --
-vim.keymap.set('n', '<C-z>', 'u', { noremap = true, silent = true })
-vim.keymap.set('i', '<C-z>', '<Esc>ui', { noremap = true, silent = true })
-
+-- Shortcut --
 vim.keymap.set('n', '<C-a>', 'gg0vG$', { noremap = true, silent = true })
 vim.keymap.set('i', '<C-a>', '<Esc>gg0vG$', { noremap = true, silent = true })
 
 vim.keymap.set('n', '<S-Tab>', ':tabnext<CR>', { noremap = true, silent = true })
-
-
--- Numberline engine
-local number_toggle_group = vim.api.nvim_create_augroup("NumberToggle", {
-    clear = true,
-})
-
-local line_number_enabled = true
-
-vim.keymap.set("n", "<F4>", function()
-    line_number_enabled = not line_number_enabled
-
-    vim.opt.number = line_number_enabled
-    vim.opt.relativenumber = line_number_enabled
-end, {
-    silent = true,
-    desc = "Toggle line numbers",
-})
-
-vim.api.nvim_create_autocmd("InsertEnter", {
-    group = number_toggle_group,
-    callback = function()
-        vim.opt.number = line_number_enabled
-        vim.opt.relativenumber = false
-    end,
-})
-
-vim.api.nvim_create_autocmd("InsertLeave", {
-    group = number_toggle_group,
-    callback = function()
-        vim.opt.number = line_number_enabled
-        vim.opt.relativenumber = line_number_enabled
-    end,
-})
 
 -- Terminal toggle
 vim.keymap.set("n", "<F2>", function()
@@ -142,8 +136,11 @@ end, { desc = "Toggle terminal" })
 
 
 
+
+
+
 -- Build and Run --
--- <F9>: Save, compile, run (with .inp file)
+-- Save, compile, run
 local function cp_compile()
     vim.cmd("write")
 
@@ -176,20 +173,20 @@ vim.keymap.set("n", "<F9>", function()
 
     if vim.fn.filereadable(inp) == 1 then
 		vim.cmd("startinsert")
-        vim.cmd("botright 20split | terminal time " .. exe .. " < " .. vim.fn.shellescape(inp))
+        vim.cmd("vsplit | terminal time " .. exe .. " < " .. vim.fn.shellescape(inp))
     else
 		vim.cmd("startinsert")
         vim.notify("Input file not found: " .. inp, vim.log.levels.WARN)
     end
 end, { desc = "CP: Compile & Run with input file" })
---
+
 -- F10: save -> compile -> run with manual input
 vim.keymap.set("n", "<F10>", function()
 	local exe = cp_compile()
 		if not exe then
 			return
 		end
-    vim.cmd("botright 20split | terminal time " .. exe)
+    vim.cmd("vsplit | terminal time " .. exe)
 end, { desc = "CP: Compile & Run manually" })
 
 
@@ -197,7 +194,7 @@ end, { desc = "CP: Compile & Run manually" })
 
 
 
--- Workspace layout
+-- Layout for CP
 local cpp_layout = vim.api.nvim_create_augroup("CppInputLayout", {
 
   clear = true,
@@ -220,30 +217,22 @@ vim.api.nvim_create_autocmd("BufEnter", {
     vim.cmd("rightbelow 70vsplit")
     vim.cmd("wincmd l")
     vim.cmd("edit " .. vim.fn.fnameescape(inp_file))
-
     vim.cmd("wincmd h")
   end,
 })
 
 
+
 vim.opt.showtabline = 1
 vim.opt.laststatus = 0
-
-vim.o.statusline = table.concat({
-  " %F",
-  " %m",
-  "%=",
-  "%L Ln",
-  " | Row %l, Col %c ",
-})
+vim.o.statusline = " %F %m%=%L Ln | Row %l, Col %c "
 
 
 
 
 
 
--- Theme --
--- Enable Tree-sitter highlighting: for C, C++, Python and Lua
+-- Tree-sitter
 vim.api.nvim_create_autocmd("FileType", {
     pattern = { "c", "cpp", "java", "python", "lua" },
     callback = function(args)
@@ -254,14 +243,13 @@ vim.api.nvim_create_autocmd("FileType", {
 
 
 -- Terminal color
--- Use colorscheme in terminal emulator
--- Change background to black and foreground to white
-
 vim.api.nvim_create_autocmd("TermOpen", {
     callback = function()
         vim.wo.winhl = "Normal:TermNormal,NormalNC:TermNormal"
     end,
 })
+
+
 
 
 
@@ -290,30 +278,31 @@ function M.setup()
 		bright_cyan = "#00FFFF",
 	}
 	local highlight = {
-		Normal = { fg=colors.white, bg=colors.blue },
+		Normal = { fg=colors.bright_white, bg=colors.blue },
 		LineNr = { fg=colors.bright_yellow},
 		CursorLine = { bg=colors.cyan },
 		Cursor = { bg="#FFFF7F" },
 		CursorInsert = { bg="#FFFF7F" },
 		CursorReplace = { bg="#FFFF7F" },
 		ModeMsg = { fg=colors.cyan, bold=true },
-		TermNormal = { fg=colors.white, bg=colors.black },
+		TermNormal = { fg=colors.bright_white, bg=colors.black },
 
-		Comment = { fg=colors.cyan, italic=true },
+		Comment = { fg=colors.cyan },
 		Constant = { fg=colors.bright_green },
 		cConstant = { fg=colors.bright_blue },
 		cIncluded = { fg=colors.bright_red },
 		Special = { fg=colors.bright_green },
 		String = { fg=colors.bright_yellow },
 
-		Keyword = { fg=colors.white },
-		Statement = { fg=colors.white },
-		Type = { fg=colors.white },
+		Keyword = { fg=colors.bright_white },
+		Statement = { fg=colors.bright_white },
+		Type = { fg=colors.bright_white },
 		PreProc = { fg=colors.bright_green },
 		Function = { fg=colors.bright_blue },
+        Delimiter = { fg=colors.bright_white },
 		Identifier = { fg=colors.bright_blue },
 
-		Error = { fg=colors.white, bg=colors.bright_red },
+		Error = { fg=colors.bright_white, bg=colors.bright_red },
 		Todo = { fg=colors.black, bg=colors.yellow },
 		Title = { fg=colors.bright_yellow },
 
@@ -323,81 +312,113 @@ function M.setup()
 		CurSearch = { fg=colors.black, bg=colors.yellow },
 
 		WarningMsg = { fg=colors.bright_red },
-		ErrorMsg = { fg=colors.white, bg=colors.bright_red, bold=true },
+		ErrorMsg = { fg=colors.bright_white, bg=colors.bright_red, bold=true },
 		MoreMsg = { fg=colors.cyan },
 		Question = { fg=colors.cyan },
 
 		TabLine = { fg=colors.black, bg=colors.cyan },
-		TabLineSel = { fg=colors.white, bg=colors.black },
+		TabLineSel = { fg=colors.bright_white, bg=colors.black },
 		TabLineFill = { bg=colors.cyan },
 		Pmenu = { fg=colors.black, bg=colors.bright_black },
 		PmenuSel = { fg=colors.black, bg=colors.cyan },
 
-		Statusline = { fg=colors.white, bg=colors.black },
+		Statusline = { fg=colors.bright_white, bg=colors.black },
 		StatuslineNC = { fg=colors.black, bg=colors.cyan },
 
 
 
 		-- This part is just for who installed Tree-sitter
+        -- Tree-sitter: default
+        ["@variable"] = { fg=colors.bright_white },
+        ["@operator"] = { fg=colors.bright_white },
+
 		-- Tree-sitter: lua
-		["@punctuation.bracket.lua"] = { fg=colors.bright_yellow },
-		["@punctuation.delimiter.lua"] = { fg=colors.bright_yellow },
-		["@constructor.lua"] = { fg=colors.bright_yellow },
-		["@property.lua"] = { fg=colors.white },
+		["@property.lua"] = { fg=colors.bright_white },
 		["@variable.member.lua"] = { fg=colors.bright_blue },
 
 		-- Tree-sitter: cpp
-		["@function.cpp"] = { fg=colors.white },
-		["@type.builtin.cpp"] = { fg=colors.white},
+		["@function.cpp"] = { fg=colors.bright_white },
+		["@type.builtin.cpp"] = { fg=colors.bright_white},
 		["@variable.cpp"] = { fg=colors.bright_blue },
 		["@character.cpp"] = { fg=colors.bright_yellow },
 		["@string.escape.cpp"] = { fg=colors.bright_yellow },
 		["@keyword.import.cpp"] = { fg=colors.bright_green },
 		["@keyword.directive.cpp"] = { fg=colors.bright_green },
 		["@keyword.directive.define.cpp"] = { fg=colors.bright_green },
-		--
+        ["@boolean.cpp"] = { fg=colors.bright_white },
+        ["@function.macro.cpp"] = { fg=colors.bright_green },
 		
-
-
-		-- Custom CP syntax highlight
-		CPIO = { fg=colors.white },
-		CPOperator = { fg=colors.bright_yellow },
-		CPContainer = { fg=colors.white },
-		CPFunction = { fg=colors.bright_blue },
 	}
 
 	for group, opts in pairs(highlight) do
 		vim.api.nvim_set_hl(0, group, opts)
 	end
+    -- Custom Highlighting
+    -- CP
+    local custom_matches = {
+        -- punctuation
+        {
+            patterns = {
+                [[{]],
+                [[}]],
+                [[;]],
+                [[::]],
+            },
+            fg = colors.bright_yellow,
+        },
 
-	
-	-- Custom CP highlighting
-	vim.api.nvim_create_autocmd("FileType", {
-		pattern = { "c", "cpp" },
+        -- library
+        {
+            patterns = {
+                -- more library
+                [[#include\s\+<\zs[^>]\+\ze>]],
+                [[#include\s\+"\zs[^"]\+\ze"]],
+            },
+            fg=colors.bright_red,
+        },
 
-		callback = function()
-			vim.fn.matchadd(
-				"CPIO",
-				[[\<\(cin\|cout\|printf\|scanf\)\>]],
-				100
-			)
-			vim.fn.matchadd(
-				"CPOperator",
-				[[->\|::\|,\|;\|<\|>\|{\|}]]
-			)
-			vim.fn.matchadd(
-				"CPContainer",
-				[[\<\(array\|bitset\|vector\|stack\|queue\|deque\|priority_queue\|forward_list\|list\|set\|multiset\|unordered_set\|unordered_multiset\|map\|multimap\|unordered_map\|unordered_multimap\)\>]]
-			)
+        -- ' and "
+        {
+            patterns = {
+                [[']],
+                [["]],
+            },
+            fg=colors.yellow,
+        },
 
-			vim.fn.matchadd(
-				"CPFunction",
-				[[\<\(begin\|end\|rbegin\|rend\|size\|length\|sizeof\|empty\|resize\|capacity\|reverse\|assign\|memset\|front\|back\|at\|insert\|erase\|push_back\|pop_back\|push_front\|pop_front\|push\|pop\|clear\|swap\|count\|find\|lower_bound\|upper_bound\)\>]]
-			)
+        -- less color on basic i/o c++
+        {
+            patterns = {
+                [[\<cin\>]],
+                [[\<cout\>]],
+                [[\<printf\>]],
+                [[\<scanf\>]],
+                [[\<endl\>]],
+                [[\<cerr\>]],
+                [[\V>>]],
+                [[\V<<]],
+            },
+            fg = colors.bright_white,
+        },
 
-		end,
-	})
+    }
 
+    for i, item in ipairs(custom_matches) do
+        local group = "CustomHighlight" .. i
+
+        vim.api.nvim_set_hl(0, group, {
+            fg = item.fg,
+            bg = item.bg,
+            bold = item.bold,
+            italic = item.italic,
+        })
+
+        for _, pattern in ipairs(item.patterns) do
+            vim.fn.matchadd(group, pattern, 100)
+        end
+    end
 end
 
 M.setup()
+
+
