@@ -190,30 +190,22 @@ local function cp_get_files()
 
     local cpp_file = vim.api.nvim_buf_get_name(0)
 
-
     -- -----------------------------------------------------
     -- If current buffer isn't .cpp,
     -- search opened buffers in current tab.
     -- -----------------------------------------------------
 
     if not cpp_file:match("%.cpp$") then
-
         for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-
             if vim.api.nvim_buf_is_valid(buf) then
-
                 local name =
                     vim.api.nvim_buf_get_name(buf)
-
                 if name:match("%.cpp$") then
                     cpp_file = name
                     break
                 end
-
             end
-
         end
-
     end
 
 
@@ -223,10 +215,8 @@ local function cp_get_files()
         return nil
     end
 
-
     local base =
         vim.fn.fnamemodify(cpp_file, ":r")
-
 
     return {
         cpp = cpp_file,
@@ -247,16 +237,13 @@ local function cp_save_cpp(files)
     local cpp_buf =
         vim.fn.bufnr(files.cpp)
 
-
     if cpp_buf == -1 then
         return false
     end
 
-
     if not vim.api.nvim_buf_is_valid(cpp_buf) then
         return false
     end
-
 
     vim.api.nvim_buf_call(
         cpp_buf,
@@ -264,7 +251,6 @@ local function cp_save_cpp(files)
             vim.cmd("write")
         end
     )
-
 
     return true
 
@@ -284,15 +270,12 @@ local function cp_get_cpp_win()
         return nil
     end
 
-
     local cpp_buf =
         vim.fn.bufnr(files.cpp)
-
 
     if cpp_buf == -1 then
         return nil
     end
-
 
     for _, win in ipairs(
         vim.api.nvim_tabpage_list_wins(0)
@@ -303,9 +286,7 @@ local function cp_get_cpp_win()
         then
             return win
         end
-
     end
-
 
     return nil
 
@@ -326,7 +307,6 @@ local function cp_get_right_win()
     then
         return vim.t.cp_right_win
     end
-
 
     return nil
 
@@ -352,9 +332,7 @@ local function cp_get_terminal_buf()
         then
             return vim.t.cp_terminal_buf
         end
-
     end
-
 
     return nil
 
@@ -374,19 +352,15 @@ local function cp_get_input_buf()
         return nil
     end
 
-
     local buf =
         vim.fn.bufnr(files.inp)
-
 
     if buf == -1 then
 
         buf = vim.fn.bufadd(files.inp)
 
         vim.fn.bufload(buf)
-
     end
-
 
     return buf
 
@@ -403,11 +377,9 @@ local function cp_set_terminal_colors()
     local win =
         cp_get_right_win()
 
-
     if not win then
         return
     end
-
 
     vim.wo[win].winhl =
         "Normal:TermNormal,NormalNC:TermNormal"
@@ -425,11 +397,9 @@ local function cp_set_editor_colors()
     local win =
         cp_get_right_win()
 
-
     if not win then
         return
     end
-
 
     vim.wo[win].winhl = ""
 
@@ -446,29 +416,23 @@ local function cp_show_input()
     local win =
         cp_get_right_win()
 
-
     if not win then
         return false
     end
 
-
     local buf =
         cp_get_input_buf()
-
 
     if not buf then
         return false
     end
-
 
     vim.api.nvim_win_set_buf(
         win,
         buf
     )
 
-
     cp_set_editor_colors()
-
 
     vim.t.cp_right_mode = "input"
 
@@ -488,27 +452,21 @@ local function cp_show_terminal()
     local win =
         cp_get_right_win()
 
-
     local terminal_buf =
         cp_get_terminal_buf()
-
 
     if not win or not terminal_buf then
         return false
     end
-
 
     vim.api.nvim_win_set_buf(
         win,
         terminal_buf
     )
 
-
     cp_set_terminal_colors()
 
-
     vim.t.cp_right_mode = "terminal"
-
 
     return true
 
@@ -525,17 +483,12 @@ local function cp_focus_cpp()
     local win =
         cp_get_cpp_win()
 
-
     if win
         and vim.api.nvim_win_is_valid(win)
     then
-
         vim.api.nvim_set_current_win(win)
-
         return true
-
     end
-
 
     return false
 
@@ -553,21 +506,16 @@ local function cp_focus_input()
         return false
     end
 
-
     local win =
         cp_get_right_win()
-
 
     if win
         and vim.api.nvim_win_is_valid(win)
     then
 
         vim.api.nvim_set_current_win(win)
-
         return true
-
     end
-
 
     return false
 
@@ -585,23 +533,16 @@ local function cp_focus_terminal()
         return false
     end
 
-
     local win =
         cp_get_right_win()
-
 
     if win
         and vim.api.nvim_win_is_valid(win)
     then
-
         vim.api.nvim_set_current_win(win)
-
         vim.cmd("startinsert")
-
         return true
-
     end
-
 
     return false
 
@@ -618,40 +559,29 @@ local function cp_terminal_send(command)
     local terminal_buf =
         cp_get_terminal_buf()
 
-
     if not terminal_buf then
-
         vim.notify(
             "CP terminal not found",
             vim.log.levels.ERROR
         )
-
         return false
-
     end
-
 
     local channel =
         vim.bo[terminal_buf].channel
 
-
     if not channel or channel == 0 then
-
         vim.notify(
             "CP terminal channel not found",
             vim.log.levels.ERROR
         )
-
         return false
-
     end
-
 
     vim.api.nvim_chan_send(
         channel,
         command .. "\n"
     )
-
 
     return true
 
@@ -669,14 +599,11 @@ end
 vim.keymap.set("n", "<F8>", function()
 
     if not cp_focus_input() then
-
         vim.notify(
             "Cannot open .inp",
             vim.log.levels.ERROR
         )
-
         return
-
     end
 
 end, {
@@ -706,46 +633,35 @@ vim.keymap.set("n", "<F9>", function()
     local files =
         cp_get_files()
 
-
     if not files then
-
         vim.notify(
             "Cannot find .cpp file",
             vim.log.levels.ERROR
         )
-
         return
-
     end
-
 
     -- -----------------------------------------------------
     -- Save cpp
     -- -----------------------------------------------------
 
     if not cp_save_cpp(files) then
-
         vim.notify(
             "Cannot save " .. files.cpp,
             vim.log.levels.ERROR
         )
-
         return
-
     end
-
 
     -- -----------------------------------------------------
     -- Make sure .inp exists
     -- -----------------------------------------------------
 
     if vim.fn.filereadable(files.inp) ~= 1 then
-
         vim.fn.writefile(
             {},
             files.inp
         )
-
     end
 
 
@@ -756,22 +672,17 @@ vim.keymap.set("n", "<F9>", function()
     local inp_empty =
         vim.fn.getfsize(files.inp) <= 0
 
-
     -- -----------------------------------------------------
     -- Show terminal
     -- -----------------------------------------------------
 
     if not cp_show_terminal() then
-
         vim.notify(
             "CP terminal not found",
             vim.log.levels.ERROR
         )
-
         return
-
     end
-
 
     -- -----------------------------------------------------
     -- Run existing bash function
@@ -787,30 +698,24 @@ vim.keymap.set("n", "<F9>", function()
             files.program
         )
 
-
     if not cp_terminal_send(command) then
         return
     end
-
 
     -- -----------------------------------------------------
     -- Focus
     -- -----------------------------------------------------
 
     if inp_empty then
-
         -- Interactive input:
         -- user needs terminal immediately
 
         cp_focus_terminal()
-
     else
-
         -- Input comes from file:
         -- return to code
 
         cp_focus_cpp()
-
     end
 
 end, {
@@ -837,11 +742,8 @@ vim.keymap.set("t", "<C-h>", function()
         false
     )
 
-
     vim.schedule(function()
-
         cp_focus_cpp()
-
     end)
 
 end, {
@@ -861,13 +763,10 @@ vim.keymap.set("n", "<C-l>", function()
     local win =
         cp_get_right_win()
 
-
     if win
         and vim.api.nvim_win_is_valid(win)
     then
-
         vim.api.nvim_set_current_win(win)
-
     end
 
 end, {
@@ -885,21 +784,15 @@ vim.keymap.set("t", "<C-l>", function()
         false
     )
 
-
     vim.schedule(function()
-
         local win =
             cp_get_right_win()
-
 
         if win
             and vim.api.nvim_win_is_valid(win)
         then
-
             vim.api.nvim_set_current_win(win)
-
         end
-
     end)
 
 end, {
@@ -971,7 +864,6 @@ vim.api.nvim_create_autocmd(
             local inp_file =
                 base .. ".inp"
 
-
             -- -------------------------------------------------
             -- Create .inp if missing
             -- -------------------------------------------------
@@ -979,14 +871,11 @@ vim.api.nvim_create_autocmd(
             if vim.fn.filereadable(inp_file)
                 ~= 1
             then
-
                 vim.fn.writefile(
                     {},
                     inp_file
                 )
-
             end
-
 
             -- -------------------------------------------------
             -- Remember cpp window
@@ -995,23 +884,20 @@ vim.api.nvim_create_autocmd(
             local cpp_win =
                 vim.api.nvim_get_current_win()
 
-
             -- -------------------------------------------------
             -- Create right-side window
             -- -------------------------------------------------
 
             vim.cmd(
-                "rightbelow 70vsplit"
+                "rightbelow 80vsplit"
             )
 
 
             local right_win =
                 vim.api.nvim_get_current_win()
 
-
             vim.t.cp_right_win =
                 right_win
-
 
             -- -------------------------------------------------
             -- Open .inp
@@ -1020,19 +906,15 @@ vim.api.nvim_create_autocmd(
             local inp_buf =
                 vim.fn.bufadd(inp_file)
 
-
             vim.fn.bufload(inp_buf)
-
 
             vim.api.nvim_win_set_buf(
                 right_win,
                 inp_buf
             )
 
-
             vim.t.cp_right_mode =
                 "input"
-
 
             -- -------------------------------------------------
             -- Create terminal buffer
@@ -1044,19 +926,15 @@ vim.api.nvim_create_autocmd(
             vim.cmd("enew")
             vim.cmd("terminal")
 
-
             local terminal_buf =
                 vim.api.nvim_get_current_buf()
-
 
             vim.t.cp_terminal_buf =
                 terminal_buf
 
-
             vim.bo[
                 terminal_buf
             ].buflisted = false
-
 
             -- -------------------------------------------------
             -- Put .inp back
@@ -1067,13 +945,10 @@ vim.api.nvim_create_autocmd(
                 inp_buf
             )
 
-
             cp_set_editor_colors()
-
 
             vim.t.cp_right_mode =
                 "input"
-
 
             -- -------------------------------------------------
             -- Mark layout
@@ -1081,7 +956,6 @@ vim.api.nvim_create_autocmd(
 
             vim.t.cp_layout_created =
                 true
-
 
             -- -------------------------------------------------
             -- Return to cpp
@@ -1101,7 +975,7 @@ vim.api.nvim_create_autocmd(
 
 
 vim.opt.showtabline = 1
-vim.opt.laststatus = 1
+vim.opt.laststatus = 0
 vim.o.statusline = " %F %m%=%L Ln | Row %l, Col %c "
 
 
