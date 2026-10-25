@@ -129,7 +129,7 @@ vim.keymap.set("n", "<F2>", function()
 		end
 	end
 
-	vim.cmd("botright 20split")
+	vim.cmd("vsplit")
 	vim.cmd("terminal")
 	vim.cmd("startinsert")
 end, { desc = "Toggle terminal" })
@@ -139,87 +139,838 @@ end, { desc = "Toggle terminal" })
 
 
 
--- Build and Run --
--- Save, compile, run
-local function cp_compile()
-    vim.cmd("write")
+-- =========================================================
+-- Competitive Programming
+-- =========================================================
+--
+-- Layout:
+--
+--   sol.cpp          | sol.inp
+--                    |
+--                    |
+--                    |
+--                    |
+--
+-- Right side = ONE window
+--
+--     .inp
+--       <----> terminal
+--
+--
+-- F8:
+--     Show .inp + focus .inp
+--
+-- F9:
+--     Save
+--     Run `ric`
+--
+--     .inp has input:
+--         -> run with .inp
+--         -> focus back to .cpp
+--
+--     .inp is empty:
+--         -> run interactive
+--         -> focus terminal
+--
+-- Ctrl+h in terminal:
+--     -> go to .cpp
+--
+-- Ctrl+l:
+--     -> go to right panel
+--
+-- =========================================================
 
-    local file = vim.fn.expand("%:p")
-    local base = vim.fn.expand("%:p:r")
-    local exe = "/tmp/" .. vim.fn.expand("%:t:r")
 
-    local cmd = string.format(
-        "g++ -std=c++17 -O2 -Wall -Wextra %q -o %q",
-        file,
-        exe
-    )
 
-    local result = vim.fn.system(cmd)
+-- =========================================================
+-- Files
+-- =========================================================
 
-    if vim.v.shell_error ~= 0 then
-        vim.notify(result, vim.log.levels.ERROR)
+local function cp_get_files()
+
+    local cpp_file = vim.api.nvim_buf_get_name(0)
+
+    -- -----------------------------------------------------
+    -- If current buffer isn't .cpp,
+    -- search opened buffers in current tab.
+    -- -----------------------------------------------------
+
+    if not cpp_file:match("%.cpp$") then
+        for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+            if vim.api.nvim_buf_is_valid(buf) then
+                local name =
+                    vim.api.nvim_buf_get_name(buf)
+                if name:match("%.cpp$") then
+                    cpp_file = name
+                    break
+                end
+            end
+        end
+    end
+
+
+    if cpp_file == ""
+        or not cpp_file:match("%.cpp$")
+    then
         return nil
     end
 
-    return exe
+    local base =
+        vim.fn.fnamemodify(cpp_file, ":r")
+
+    return {
+        cpp = cpp_file,
+        inp = base .. ".inp",
+        program = base,
+    }
+
 end
 
--- F9: save -> compile -> run with <filename>.inp
+
+
+-- =========================================================
+-- Save cpp
+-- =========================================================
+
+local function cp_save_cpp(files)
+
+    local cpp_buf =
+        vim.fn.bufnr(files.cpp)
+
+    if cpp_buf == -1 then
+        return false
+    end
+
+    if not vim.api.nvim_buf_is_valid(cpp_buf) then
+        return false
+    end
+
+    vim.api.nvim_buf_call(
+        cpp_buf,
+        function()
+            vim.cmd("write")
+        end
+    )
+
+    return true
+
+end
+
+
+
+-- =========================================================
+-- Get .cpp window
+-- =========================================================
+
+local function cp_get_cpp_win()
+
+    local files = cp_get_files()
+
+    if not files then
+        return nil
+    end
+
+    local cpp_buf =
+        vim.fn.bufnr(files.cpp)
+
+    if cpp_buf == -1 then
+        return nil
+    end
+
+    for _, win in ipairs(
+        vim.api.nvim_tabpage_list_wins(0)
+    ) do
+
+        if vim.api.nvim_win_get_buf(win)
+            == cpp_buf
+        then
+            return win
+        end
+    end
+
+    return nil
+
+end
+
+
+
+-- =========================================================
+-- Get right-side window
+-- =========================================================
+
+local function cp_get_right_win()
+
+    if vim.t.cp_right_win
+        and vim.api.nvim_win_is_valid(
+            vim.t.cp_right_win
+        )
+    then
+        return vim.t.cp_right_win
+    end
+
+    return nil
+
+end
+
+
+
+-- =========================================================
+-- Get terminal buffer
+-- =========================================================
+
+local function cp_get_terminal_buf()
+
+    if vim.t.cp_terminal_buf
+        and vim.api.nvim_buf_is_valid(
+            vim.t.cp_terminal_buf
+        )
+    then
+
+        if vim.bo[
+            vim.t.cp_terminal_buf
+        ].buftype == "terminal"
+        then
+            return vim.t.cp_terminal_buf
+        end
+    end
+
+    return nil
+
+end
+
+
+
+-- =========================================================
+-- Get input buffer
+-- =========================================================
+
+local function cp_get_input_buf()
+
+    local files = cp_get_files()
+
+    if not files then
+        return nil
+    end
+
+    local buf =
+        vim.fn.bufnr(files.inp)
+
+    if buf == -1 then
+
+        buf = vim.fn.bufadd(files.inp)
+
+        vim.fn.bufload(buf)
+    end
+
+    return buf
+
+end
+
+
+
+-- =========================================================
+-- Set terminal colors
+-- =========================================================
+
+local function cp_set_terminal_colors()
+
+    local win =
+        cp_get_right_win()
+
+    if not win then
+        return
+    end
+
+    vim.wo[win].winhl =
+        "Normal:TermNormal,NormalNC:TermNormal"
+
+end
+
+
+
+-- =========================================================
+-- Set normal editor colors
+-- =========================================================
+
+local function cp_set_editor_colors()
+
+    local win =
+        cp_get_right_win()
+
+    if not win then
+        return
+    end
+
+    vim.wo[win].winhl = ""
+
+end
+
+
+
+-- =========================================================
+-- Show .inp
+-- =========================================================
+
+local function cp_show_input()
+
+    local win =
+        cp_get_right_win()
+
+    if not win then
+        return false
+    end
+
+    local buf =
+        cp_get_input_buf()
+
+    if not buf then
+        return false
+    end
+
+    vim.api.nvim_win_set_buf(
+        win,
+        buf
+    )
+
+    cp_set_editor_colors()
+
+    vim.t.cp_right_mode = "input"
+
+
+    return true
+
+end
+
+
+
+-- =========================================================
+-- Show terminal
+-- =========================================================
+
+local function cp_show_terminal()
+
+    local win =
+        cp_get_right_win()
+
+    local terminal_buf =
+        cp_get_terminal_buf()
+
+    if not win or not terminal_buf then
+        return false
+    end
+
+    vim.api.nvim_win_set_buf(
+        win,
+        terminal_buf
+    )
+
+    cp_set_terminal_colors()
+
+    vim.t.cp_right_mode = "terminal"
+
+    return true
+
+end
+
+
+
+-- =========================================================
+-- Focus .cpp
+-- =========================================================
+
+local function cp_focus_cpp()
+
+    local win =
+        cp_get_cpp_win()
+
+    if win
+        and vim.api.nvim_win_is_valid(win)
+    then
+        vim.api.nvim_set_current_win(win)
+        return true
+    end
+
+    return false
+
+end
+
+
+
+-- =========================================================
+-- Focus .inp
+-- =========================================================
+
+local function cp_focus_input()
+
+    if not cp_show_input() then
+        return false
+    end
+
+    local win =
+        cp_get_right_win()
+
+    if win
+        and vim.api.nvim_win_is_valid(win)
+    then
+
+        vim.api.nvim_set_current_win(win)
+        return true
+    end
+
+    return false
+
+end
+
+
+
+-- =========================================================
+-- Focus terminal
+-- =========================================================
+
+local function cp_focus_terminal()
+
+    if not cp_show_terminal() then
+        return false
+    end
+
+    local win =
+        cp_get_right_win()
+
+    if win
+        and vim.api.nvim_win_is_valid(win)
+    then
+        vim.api.nvim_set_current_win(win)
+        vim.cmd("startinsert")
+        return true
+    end
+
+    return false
+
+end
+
+
+
+-- =========================================================
+-- Send command to terminal
+-- =========================================================
+
+local function cp_terminal_send(command)
+
+    local terminal_buf =
+        cp_get_terminal_buf()
+
+    if not terminal_buf then
+        vim.notify(
+            "CP terminal not found",
+            vim.log.levels.ERROR
+        )
+        return false
+    end
+
+    local channel =
+        vim.bo[terminal_buf].channel
+
+    if not channel or channel == 0 then
+        vim.notify(
+            "CP terminal channel not found",
+            vim.log.levels.ERROR
+        )
+        return false
+    end
+
+    vim.api.nvim_chan_send(
+        channel,
+        command .. "\n"
+    )
+
+    return true
+
+end
+
+
+
+-- =========================================================
+-- F8
+--
+-- Show .inp
+-- Focus .inp
+-- =========================================================
+
+vim.keymap.set("n", "<F8>", function()
+
+    if not cp_focus_input() then
+        vim.notify(
+            "Cannot open .inp",
+            vim.log.levels.ERROR
+        )
+        return
+    end
+
+end, {
+    desc = "CP: Focus input",
+})
+
+
+
+-- =========================================================
+-- F9
+--
+-- Save
+-- Run ric
+--
+-- Input exists:
+--     terminal stays visible
+--     focus -> cpp
+--
+-- Input empty:
+--     terminal stays visible
+--     focus -> terminal
+--
+-- =========================================================
+
 vim.keymap.set("n", "<F9>", function()
-    local exe = cp_compile()
-    if not exe then return end
 
-    local inp = vim.fn.expand("%:p:r") .. ".inp"
+    local files =
+        cp_get_files()
 
-    if vim.fn.filereadable(inp) == 1 then
-		vim.cmd("startinsert")
-        vim.cmd("vsplit | terminal time " .. exe .. " < " .. vim.fn.shellescape(inp))
+    if not files then
+        vim.notify(
+            "Cannot find .cpp file",
+            vim.log.levels.ERROR
+        )
+        return
+    end
+
+    -- -----------------------------------------------------
+    -- Save cpp
+    -- -----------------------------------------------------
+
+    if not cp_save_cpp(files) then
+        vim.notify(
+            "Cannot save " .. files.cpp,
+            vim.log.levels.ERROR
+        )
+        return
+    end
+
+    -- -----------------------------------------------------
+    -- Make sure .inp exists
+    -- -----------------------------------------------------
+
+    if vim.fn.filereadable(files.inp) ~= 1 then
+        vim.fn.writefile(
+            {},
+            files.inp
+        )
+    end
+
+
+    -- -----------------------------------------------------
+    -- Check whether input is empty
+    -- -----------------------------------------------------
+
+    local inp_empty =
+        vim.fn.getfsize(files.inp) <= 0
+
+    -- -----------------------------------------------------
+    -- Show terminal
+    -- -----------------------------------------------------
+
+    if not cp_show_terminal() then
+        vim.notify(
+            "CP terminal not found",
+            vim.log.levels.ERROR
+        )
+        return
+    end
+
+    -- -----------------------------------------------------
+    -- Run existing bash function
+    --
+    --     ric /absolute/path/to/sol
+    --
+    -- `ric` is defined in ~/.bashrc
+    -- -----------------------------------------------------
+
+    local command =
+        string.format(
+            "bash -ic 'ric %q'",
+            files.program
+        )
+
+    if not cp_terminal_send(command) then
+        return
+    end
+
+    -- -----------------------------------------------------
+    -- Focus
+    -- -----------------------------------------------------
+
+    if inp_empty then
+        -- Interactive input:
+        -- user needs terminal immediately
+
+        cp_focus_terminal()
     else
-		vim.cmd("startinsert")
-        vim.notify("Input file not found: " .. inp, vim.log.levels.WARN)
-    end
-end, { desc = "CP: Compile & Run with input file" })
+        -- Input comes from file:
+        -- return to code
 
--- F10: save -> compile -> run with manual input
-vim.keymap.set("n", "<F10>", function()
-	local exe = cp_compile()
-		if not exe then
-			return
-		end
-    vim.cmd("vsplit | terminal time " .. exe)
-end, { desc = "CP: Compile & Run manually" })
-
-
-
-
-
-
--- Layout for CP
-local cpp_layout = vim.api.nvim_create_augroup("CppInputLayout", {
-
-  clear = true,
-})
-
-vim.api.nvim_create_autocmd("BufEnter", {
-  group = cpp_layout,
-  pattern = "*.cpp",
-  callback = function()
-    
-    if vim.t.cpp_input_open then
-      return
+        cp_focus_cpp()
     end
 
-    vim.t.cpp_input_open = true
-
-    local cpp_file = vim.api.nvim_buf_get_name(0)
-    local inp_file = vim.fn.fnamemodify(cpp_file, ":r") .. ".inp"
-
-    vim.cmd("rightbelow 70vsplit")
-    vim.cmd("wincmd l")
-    vim.cmd("edit " .. vim.fn.fnameescape(inp_file))
-    vim.cmd("wincmd h")
-  end,
+end, {
+    desc = "CP: Compile & Run",
 })
+
+
+
+-- =========================================================
+-- Ctrl+h
+--
+-- Terminal -> .cpp
+--
+-- Terminal mode needs its own mapping because
+-- Ctrl+h would otherwise be sent to the shell.
+-- =========================================================
+
+vim.keymap.set("t", "<C-h>", function()
+
+    -- Leave terminal mode
+    vim.api.nvim_feedkeys(
+        vim.keycode("<C-\\><C-n>"),
+        "n",
+        false
+    )
+
+    vim.schedule(function()
+        cp_focus_cpp()
+    end)
+
+end, {
+    desc = "CP: Terminal -> Code",
+})
+
+
+
+-- =========================================================
+-- Ctrl+l
+--
+-- Terminal / code -> right panel
+-- =========================================================
+
+vim.keymap.set("n", "<C-l>", function()
+
+    local win =
+        cp_get_right_win()
+
+    if win
+        and vim.api.nvim_win_is_valid(win)
+    then
+        vim.api.nvim_set_current_win(win)
+    end
+
+end, {
+    desc = "CP: Go to right panel",
+})
+
+
+
+-- Terminal mode Ctrl+l
+vim.keymap.set("t", "<C-l>", function()
+
+    vim.api.nvim_feedkeys(
+        vim.keycode("<C-\\><C-n>"),
+        "n",
+        false
+    )
+
+    vim.schedule(function()
+        local win =
+            cp_get_right_win()
+
+        if win
+            and vim.api.nvim_win_is_valid(win)
+        then
+            vim.api.nvim_set_current_win(win)
+        end
+    end)
+
+end, {
+    desc = "CP: Terminal -> right panel",
+})
+
+
+
+-- =========================================================
+-- Layout
+--
+--   sol.cpp          | sol.inp
+--                    |
+--                    |
+--                    |
+--                    |
+--
+-- Right side is ONE window.
+--
+-- .inp and terminal occupy exactly
+-- the same window.
+-- =========================================================
+
+local cpp_layout =
+    vim.api.nvim_create_augroup(
+        "CppInputTerminalLayout",
+        {
+            clear = true,
+        }
+    )
+
+
+
+vim.api.nvim_create_autocmd(
+    "BufEnter",
+    {
+        group = cpp_layout,
+        pattern = "*.cpp",
+
+        callback = function(args)
+
+            -- -------------------------------------------------
+            -- Don't recreate layout
+            -- -------------------------------------------------
+
+            if vim.t.cp_layout_created then
+                return
+            end
+
+
+            local cpp_file =
+                vim.api.nvim_buf_get_name(
+                    args.buf
+                )
+
+
+            if cpp_file == "" then
+                return
+            end
+
+
+            local base =
+                vim.fn.fnamemodify(
+                    cpp_file,
+                    ":r"
+                )
+
+
+            local inp_file =
+                base .. ".inp"
+
+            -- -------------------------------------------------
+            -- Create .inp if missing
+            -- -------------------------------------------------
+
+            if vim.fn.filereadable(inp_file)
+                ~= 1
+            then
+                vim.fn.writefile(
+                    {},
+                    inp_file
+                )
+            end
+
+            -- -------------------------------------------------
+            -- Remember cpp window
+            -- -------------------------------------------------
+
+            local cpp_win =
+                vim.api.nvim_get_current_win()
+
+            -- -------------------------------------------------
+            -- Create right-side window
+            -- -------------------------------------------------
+
+            vim.cmd(
+                "rightbelow 80vsplit"
+            )
+
+
+            local right_win =
+                vim.api.nvim_get_current_win()
+
+            vim.t.cp_right_win =
+                right_win
+
+            -- -------------------------------------------------
+            -- Open .inp
+            -- -------------------------------------------------
+
+            local inp_buf =
+                vim.fn.bufadd(inp_file)
+
+            vim.fn.bufload(inp_buf)
+
+            vim.api.nvim_win_set_buf(
+                right_win,
+                inp_buf
+            )
+
+            vim.t.cp_right_mode =
+                "input"
+
+            -- -------------------------------------------------
+            -- Create terminal buffer
+            --
+            -- We temporarily replace the right window.
+            -- No second split is created.
+            -- -------------------------------------------------
+
+            vim.cmd("enew")
+            vim.cmd("terminal")
+
+            local terminal_buf =
+                vim.api.nvim_get_current_buf()
+
+            vim.t.cp_terminal_buf =
+                terminal_buf
+
+            vim.bo[
+                terminal_buf
+            ].buflisted = false
+
+            -- -------------------------------------------------
+            -- Put .inp back
+            -- -------------------------------------------------
+
+            vim.api.nvim_win_set_buf(
+                right_win,
+                inp_buf
+            )
+
+            cp_set_editor_colors()
+
+            vim.t.cp_right_mode =
+                "input"
+
+            -- -------------------------------------------------
+            -- Mark layout
+            -- -------------------------------------------------
+
+            vim.t.cp_layout_created =
+                true
+
+            -- -------------------------------------------------
+            -- Return to cpp
+            -- -------------------------------------------------
+
+            vim.api.nvim_set_current_win(
+                cpp_win
+            )
+
+        end,
+    }
+)
+
+
+
 
 
 
@@ -345,8 +1096,8 @@ function M.setup()
 		["@keyword.import.cpp"] = { fg=colors.bright_green },
 		["@keyword.directive.cpp"] = { fg=colors.bright_green },
 		["@keyword.directive.define.cpp"] = { fg=colors.bright_green },
-        ["@boolean.cpp"] = { fg=colors.bright_white },
-        ["@function.macro.cpp"] = { fg=colors.bright_green },
+    ["@boolean.cpp"] = { fg=colors.bright_white },
+    ["@function.macro.cpp"] = { fg=colors.bright_green },
 		
 	}
 
