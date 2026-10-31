@@ -1,0 +1,166 @@
+-- Syntax highlight
+local M = {}
+function M.setup()
+	vim.opt.termguicolors = true
+
+	local colors = {
+		black = "#000000",
+		bright_black = "#808080",
+		white = "#EEEEEE",
+		bright_white = "#FFFFFF",
+		red = "#800000",
+		bright_red = "#FF0000",
+		green = "#008000",
+		bright_green = "#00FF00",
+		yellow = "#808000",
+		bright_yellow = "#FFFF00",
+		blue = "#000080",
+		bright_blue = "#00DDFF",
+		purple = "#800080",
+		bright_purple = "#FF00FF",
+		cyan = "#2E8B7C",
+		bright_cyan = "#00FFFF",
+	}
+	local highlight = {
+		Normal = { fg=colors.bright_white, bg=colors.blue },
+		LineNr = { fg=colors.bright_yellow},
+		CursorLine = { bg=colors.cyan },
+		Cursor = { bg="#FFFF7F" },
+		CursorInsert = { bg="#FFFF7F" },
+		CursorReplace = { bg="#FFFF7F" },
+		ModeMsg = { fg=colors.cyan, bold=true },
+		TermNormal = { fg=colors.bright_white, bg=colors.black },
+
+		Comment = { fg=colors.cyan },
+		Constant = { fg=colors.bright_green },
+		cConstant = { fg=colors.bright_blue },
+		cIncluded = { fg=colors.bright_red },
+		Special = { fg=colors.bright_green },
+		String = { fg=colors.bright_yellow },
+
+		Keyword = { fg=colors.bright_white },
+		Statement = { fg=colors.bright_white },
+		Type = { fg=colors.bright_white },
+		PreProc = { fg=colors.bright_green },
+		Function = { fg=colors.bright_blue },
+        Delimiter = { fg=colors.bright_white },
+		Identifier = { fg=colors.bright_blue },
+
+		Error = { fg=colors.bright_white, bg=colors.bright_red },
+		Todo = { fg=colors.black, bg=colors.yellow },
+		Title = { fg=colors.bright_yellow },
+
+		Visual = { fg=colors.black, bg=colors.cyan },
+		MatchParen = { fg=colors.bright_red },
+		NonText = { fg=colors.bright_blue },
+		CurSearch = { fg=colors.black, bg=colors.yellow },
+
+		WarningMsg = { fg=colors.bright_red },
+		ErrorMsg = { fg=colors.bright_white, bg=colors.bright_red, bold=true },
+		MoreMsg = { fg=colors.cyan },
+		Question = { fg=colors.cyan },
+
+		TabLine = { fg=colors.black, bg=colors.cyan },
+		TabLineSel = { fg=colors.bright_white, bg=colors.black },
+		TabLineFill = { bg=colors.cyan },
+		Pmenu = { fg=colors.black, bg=colors.bright_black },
+		PmenuSel = { fg=colors.black, bg=colors.cyan },
+
+		Statusline = { fg=colors.bright_white, bg=colors.black },
+		StatuslineNC = { fg=colors.black, bg=colors.cyan },
+
+
+
+		-- This part is just for who installed Tree-sitter
+        -- Tree-sitter: default
+        ["@variable"] = { fg=colors.bright_white },
+        ["@operator"] = { fg=colors.bright_white },
+
+		-- Tree-sitter: lua
+		["@property.lua"] = { fg=colors.bright_white },
+		["@variable.member.lua"] = { fg=colors.bright_blue },
+
+		-- Tree-sitter: cpp
+		["@function.cpp"] = { fg=colors.bright_white },
+		["@type.builtin.cpp"] = { fg=colors.bright_white},
+		["@variable.cpp"] = { fg=colors.bright_blue },
+		["@character.cpp"] = { fg=colors.bright_yellow },
+		["@string.escape.cpp"] = { fg=colors.bright_yellow },
+		["@keyword.import.cpp"] = { fg=colors.bright_green },
+		["@keyword.directive.cpp"] = { fg=colors.bright_green },
+		["@keyword.directive.define.cpp"] = { fg=colors.bright_green },
+    ["@boolean.cpp"] = { fg=colors.bright_white },
+    ["@function.macro.cpp"] = { fg=colors.bright_green },
+		
+	}
+
+	for group, opts in pairs(highlight) do
+		vim.api.nvim_set_hl(0, group, opts)
+	end
+    -- Custom Highlighting
+    -- CP
+    local custom_matches = {
+        -- punctuation
+        {
+            patterns = {
+                [[{]],
+                [[}]],
+                [[;]],
+                [[::]],
+            },
+            fg = colors.bright_yellow,
+        },
+
+        -- library
+        {
+            patterns = {
+                -- more library
+                [[#include\s\+<\zs[^>]\+\ze>]],
+                [[#include\s\+"\zs[^"]\+\ze"]],
+            },
+            fg=colors.bright_red,
+        },
+
+        -- ' and "
+        {
+            patterns = {
+                [[']],
+                [["]],
+            },
+            fg=colors.yellow,
+        },
+
+        -- less color on basic i/o c++
+        {
+            patterns = {
+                [[\<cin\>]],
+                [[\<cout\>]],
+                [[\<printf\>]],
+                [[\<scanf\>]],
+                [[\<endl\>]],
+                [[\<cerr\>]],
+                [[\V>>]],
+                [[\V<<]],
+            },
+            fg = colors.bright_white,
+        },
+
+    }
+
+    for i, item in ipairs(custom_matches) do
+        local group = "CustomHighlight" .. i
+
+        vim.api.nvim_set_hl(0, group, {
+            fg = item.fg,
+            bg = item.bg,
+            bold = item.bold,
+            italic = item.italic,
+        })
+
+        for _, pattern in ipairs(item.patterns) do
+            vim.fn.matchadd(group, pattern, 100)
+        end
+    end
+end
+
+M.setup()
